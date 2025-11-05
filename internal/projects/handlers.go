@@ -36,6 +36,12 @@ func (n npmHandler) Install(projectDir string) error {
 	if err := init.Run(); err != nil {
 		return errors.New("error initializing project")
 	}
+
+	// Change directory to the project folder
+	if err := os.Chdir(projectDir); err != nil {
+		return errors.New("error changing to project directory")
+	}
+
 	return nil
 }
 func (n pnpmHandler) Install(projectDir string) error {
@@ -48,5 +54,11 @@ func (n pnpmHandler) Install(projectDir string) error {
 	if err := init.Run(); err != nil {
 		return errors.New("error initializing project")
 	}
+
+	// Change directory to the project folder
+	if err := os.Chdir(projectDir); err != nil {
+		return errors.New("error changing to project directory")
+	}
+
 	return nil
 }
