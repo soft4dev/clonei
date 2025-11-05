@@ -1,7 +1,11 @@
+/*
+Copyright © 2025 NAME HERE <EMAIL ADDRESS>
+
+*/
 package main
 
-import "fmt"
+import "github.com/soft4dev/iclone/cmd"
 
 func main() {
-	fmt.Println("init")
+	cmd.Execute()
 }
