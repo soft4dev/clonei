@@ -1,7 +1,5 @@
 <img width="282" height="69" alt="Group 10" src="https://github.com/user-attachments/assets/2758038f-d348-4267-82a8-4d25f200804c" />
 
-# clonei
-
 A CLI tool to clone Git repositories and automatically install dependencies in a single shot.
 
 ## Installation
