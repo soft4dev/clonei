@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/soft4dev/iclone/internal/color"
 	"github.com/soft4dev/iclone/internal/projects"
 	"github.com/spf13/cobra"
 )
@@ -72,16 +73,21 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
-		fmt.Println("project: " + projectType)
-		fmt.Println("url: " + args[0])
+		color.PrintSuccess("project: %s", projectType)
+		color.PrintSuccess("url: %s", args[0])
 		return nil
 	},
 	Args: cobra.ExactArgs(1),
 }
 
 func Execute() {
+	// Silence Cobra's default error printing
+	rootCmd.SilenceErrors = true
+	rootCmd.SilenceUsage = true
+
 	err := rootCmd.Execute()
 	if err != nil {
+		color.PrintError(err)
 		os.Exit(1)
 	}
 }
