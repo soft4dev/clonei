@@ -1,4 +1,4 @@
-package projects_handler
+package projects
 
 import (
 	"fmt"
@@ -30,13 +30,13 @@ func (n pnpmProjectHandler) Install(projectDir string) error {
 	return nil
 }
 
-type PnpmProjectType struct{}
+type PnpmProject struct{}
 
-func (pnpmProjectType *PnpmProjectType) Name() string {
+func (pnpmProject *PnpmProject) Name() string {
 	return "pnpm"
 }
 
-func (pnpmProjectType *PnpmProjectType) Detect(projectPath string) (IProjectHandler, error) {
+func (pnpmProject *PnpmProject) Detect(projectPath string) (IProjectHandler, error) {
 	pnpmLockPath := filepath.Join(projectPath, "pnpm-lock.yaml")
 	if _, err := os.Stat(pnpmLockPath); err == nil {
 		return pnpmProjectHandler{}, nil
@@ -44,6 +44,6 @@ func (pnpmProjectType *PnpmProjectType) Detect(projectPath string) (IProjectHand
 	return nil, nil
 }
 
-func (pnpmProjectType *PnpmProjectType) DefaultProjectHandler() IProjectHandler {
+func (pnpmProject *PnpmProject) ProjectHandler() IProjectHandler {
 	return pnpmProjectHandler{}
 }

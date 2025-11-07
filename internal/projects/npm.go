@@ -1,4 +1,4 @@
-package projects_handler
+package projects
 
 import (
 	"fmt"
@@ -30,13 +30,13 @@ func (n npmProjectHandler) Install(projectDir string) error {
 	return nil
 }
 
-type NpmProjectType struct{}
+type NpmProject struct{}
 
-func (npmProjectType *NpmProjectType) Name() string {
+func (npmProject *NpmProject) Name() string {
 	return "npm"
 }
 
-func (npmProjectType *NpmProjectType) Detect(projectPath string) (IProjectHandler, error) {
+func (npmProject *NpmProject) Detect(projectPath string) (IProjectHandler, error) {
 	npmLockPath := filepath.Join(projectPath, "package-lock.json")
 	if _, err := os.Stat(npmLockPath); err == nil {
 		return npmProjectHandler{}, nil
@@ -44,6 +44,6 @@ func (npmProjectType *NpmProjectType) Detect(projectPath string) (IProjectHandle
 	return nil, nil
 }
 
-func (npmProjectType *NpmProjectType) DefaultProjectHandler() IProjectHandler {
+func (npmProject *NpmProject) ProjectHandler() IProjectHandler {
 	return npmProjectHandler{}
 }

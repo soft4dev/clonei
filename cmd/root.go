@@ -6,18 +6,18 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/soft4dev/clonei/internal"
 	"github.com/soft4dev/clonei/internal/color"
 	customErrors "github.com/soft4dev/clonei/internal/errors"
-	"github.com/soft4dev/clonei/internal/projects"
-	projectHandler "github.com/soft4dev/clonei/internal/projects/projects-handler"
+	projectHandler "github.com/soft4dev/clonei/internal/projects"
 	"github.com/soft4dev/clonei/internal/utils"
 	"github.com/spf13/cobra"
 )
 
 var (
-	project string
-	install bool
-	cd      bool
+	projectType string
+	install     bool
+	cd          bool
 )
 
 var rootCmd = &cobra.Command{
@@ -25,13 +25,13 @@ var rootCmd = &cobra.Command{
 	Short: "clone and install deps of project",
 	Long:  `It clones provided repo using git and install dependencies according to project type. eg. npm, pnpm, go, rust....`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// check if git is installed
 		if err := utils.CheckGitInstalled(); err != nil {
 			return customErrors.NewCustomErrorWithoutUsage("Error: git is not installed")
 		}
 		repoUrl := args[0]
 
-		// Extract the directory name from the repo URL
-		// e.g., "https://github.com/user/repo.git" -> "repo"
+		// Extract the directory name from the repo URL e.g., "https://github.com/user/repo.git" -> "repo"
 		var projectDirName string
 		if idx := strings.LastIndex(repoUrl, "/"); idx != -1 {
 			projectDirName = repoUrl[idx+1:]
@@ -40,10 +40,10 @@ var rootCmd = &cobra.Command{
 
 		// Check if project directory already exists
 		if _, err := os.Stat(projectDirName); err == nil {
-			// Don't show usage for directory conflicts (runtime issue, not usage issue)
 			return customErrors.NewCustomErrorWithoutUsage("project directory '%s' already exists in the current location", projectDirName)
 		}
 
+		// clone the repository
 		color.PrintInfo("Step 1: Cloning repository: %s", repoUrl)
 		gitCloneOutput := exec.Command("git", "clone", repoUrl)
 		gitCloneOutput.Stdout = os.Stdout
@@ -53,21 +53,24 @@ var rootCmd = &cobra.Command{
 			return customErrors.NewCustomErrorWithoutUsage("")
 		}
 
+		// project handler handles the dependencies installation using install() function
 		var projectHandler projectHandler.IProjectHandler
-		projectDetector := projects.DefaultDetector()
-		if project == "AUTO" {
+
+		// detects project type and set the projectHandler accordingly
+		projectDetector := internal.GetProjectDetector()
+		if projectType == "AUTO" {
 			var err error
-			if projectHandler, err = projectDetector.FindProjectHandler(projectDirName); err != nil {
+			if projectHandler, err = projectDetector.FindProjectHandlerAuto(projectDirName); err != nil {
 				return err
 			}
 		} else {
-			projectHandler = projectDetector.FindProjectHandlerFromName(project)
+			projectHandler = projectDetector.FindProjectHandlerFromName(projectType)
 		}
 
 		if projectHandler == nil {
-			// Show usage for invalid project type (usage issue)
-			return customErrors.NewCustomError("no handler found for project type '%s'\nAvailable project types: %s", project, projectDetector.GetAvailableProjectTypes())
+			return customErrors.NewCustomError("no handler found for project type '%s'\nAvailable project types: %s", projectType, projectDetector.GetAvailableProjects())
 		}
+
 		color.PrintSuccess("\n📦 Installing dependencies for %s project...")
 		if err := projectHandler.Install(projectDirName); err != nil {
 			return err
@@ -80,7 +83,7 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
-		color.PrintSuccess("project: %s", project)
+		color.PrintSuccess("project: %s", projectType)
 		color.PrintSuccess("url: %s", args[0])
 		return nil
 	},
@@ -101,7 +104,7 @@ func Execute() {
 func init() {
 	rootCmd.SilenceErrors = true
 	rootCmd.SilenceUsage = true
-	rootCmd.Flags().StringVarP(&project, "project", "p", "AUTO", "Project type (npm, go, rust, etc.). Use AUTO for auto-detection")
+	rootCmd.Flags().StringVarP(&projectType, "project", "p", "AUTO", "Project type (npm, go, rust, etc.). Use AUTO for auto-detection")
 	rootCmd.Flags().BoolVarP(&install, "install", "i", true, "controls whether to install dependencies after clone")
 	rootCmd.Flags().BoolVarP(&cd, "cd", "c", true, "controls whether to change directory into the project folder after clone")
 }
