@@ -52,5 +52,6 @@ func DefaultDetector() ProjectDetector {
 	projectDetector := ProjectDetector{}
 	projectDetector.RegisterDetector(&projectHandler.PnpmProjectType{})
 	projectDetector.RegisterDetector(&projectHandler.NpmProjectType{})
+	projectDetector.RegisterDetector(&projectHandler.CargoProjectType{})
 	return projectDetector
 }
