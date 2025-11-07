@@ -1,22 +1,21 @@
 package projects
 
 import (
-	"os"
-	"path/filepath"
+	projectHandler "github.com/soft4dev/clonei/internal/projects/projects-handler"
 )
 
 type ProjectType interface {
 	Name() string
-	Detect(projectPath string) (ProjectHandler, error)
-	DefaultProjectHandler() ProjectHandler
+	Detect(projectPath string) (projectHandler.IProjectHandler, error)
+	DefaultProjectHandler() projectHandler.IProjectHandler
 }
 
 type ProjectDetector struct {
 	projectTypes []ProjectType
 }
 
-func (self *ProjectDetector) FindProjectHandler(projectPath string) (ProjectHandler, error) {
-	for _, projectType := range self.projectTypes {
+func (projectDetector *ProjectDetector) FindProjectHandler(projectPath string) (projectHandler.IProjectHandler, error) {
+	for _, projectType := range projectDetector.projectTypes {
 		projectHandler, err := projectType.Detect(projectPath)
 		if err != nil {
 			return nil, err
@@ -28,8 +27,8 @@ func (self *ProjectDetector) FindProjectHandler(projectPath string) (ProjectHand
 	return nil, nil
 }
 
-func (self *ProjectDetector) ProjectHandlerFromName(name string) ProjectHandler {
-	for _, projectType := range self.projectTypes {
+func (projectDetector *ProjectDetector) FindProjectHandlerFromName(name string) projectHandler.IProjectHandler {
+	for _, projectType := range projectDetector.projectTypes {
 		if name == projectType.Name() {
 			return projectType.DefaultProjectHandler()
 		}
@@ -37,13 +36,13 @@ func (self *ProjectDetector) ProjectHandlerFromName(name string) ProjectHandler 
 	return nil
 }
 
-func (self *ProjectDetector) RegisterDetector(projectType ProjectType) {
-	self.projectTypes = append(self.projectTypes, projectType)
+func (projectDetector *ProjectDetector) RegisterDetector(projectType ProjectType) {
+	projectDetector.projectTypes = append(projectDetector.projectTypes, projectType)
 }
 
-func (self *ProjectDetector) GetAvailableProjectTypes() []string {
+func (projectDetector *ProjectDetector) GetAvailableProjectTypes() []string {
 	var projectTypes = []string{}
-	for _, projectType := range self.projectTypes {
+	for _, projectType := range projectDetector.projectTypes {
 		projectTypes = append(projectTypes, projectType.Name())
 	}
 	return projectTypes
@@ -51,45 +50,7 @@ func (self *ProjectDetector) GetAvailableProjectTypes() []string {
 
 func DefaultDetector() ProjectDetector {
 	projectDetector := ProjectDetector{}
-	projectDetector.RegisterDetector(&PnpmProjectType{})
-	projectDetector.RegisterDetector(&NpmProjectType{})
+	projectDetector.RegisterDetector(&projectHandler.PnpmProjectType{})
+	projectDetector.RegisterDetector(&projectHandler.NpmProjectType{})
 	return projectDetector
-}
-
-/* PNPM */
-type PnpmProjectType struct{}
-
-func (self *PnpmProjectType) Name() string {
-	return "pnpm"
-}
-
-func (self *PnpmProjectType) Detect(projectPath string) (ProjectHandler, error) {
-	pnpmLockPath := filepath.Join(projectPath, "pnpm-lock.yaml")
-	if _, err := os.Stat(pnpmLockPath); err == nil {
-		return pnpmHandler{}, nil
-	}
-	return nil, nil
-}
-
-func (self *PnpmProjectType) DefaultProjectHandler() ProjectHandler {
-	return pnpmHandler{}
-}
-
-/* NPM */
-type NpmProjectType struct{}
-
-func (self *NpmProjectType) Name() string {
-	return "npm"
-}
-
-func (self *NpmProjectType) Detect(projectPath string) (ProjectHandler, error) {
-	npmLockPath := filepath.Join(projectPath, "package-lock.json")
-	if _, err := os.Stat(npmLockPath); err == nil {
-		return npmHandler{}, nil
-	}
-	return nil, nil
-}
-
-func (self *NpmProjectType) DefaultProjectHandler() ProjectHandler {
-	return npmHandler{}
 }

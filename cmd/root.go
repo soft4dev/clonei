@@ -9,6 +9,7 @@ import (
 	"github.com/soft4dev/clonei/internal/color"
 	customErrors "github.com/soft4dev/clonei/internal/errors"
 	"github.com/soft4dev/clonei/internal/projects"
+	projectHandler "github.com/soft4dev/clonei/internal/projects/projects-handler"
 	"github.com/soft4dev/clonei/internal/utils"
 	"github.com/spf13/cobra"
 )
@@ -52,7 +53,7 @@ var rootCmd = &cobra.Command{
 			return customErrors.NewCustomErrorWithoutUsage("")
 		}
 
-		var projectHandler projects.ProjectHandler
+		var projectHandler projectHandler.IProjectHandler
 		projectDetector := projects.DefaultDetector()
 		if project == "AUTO" {
 			var err error
@@ -60,7 +61,7 @@ var rootCmd = &cobra.Command{
 				return err
 			}
 		} else {
-			projectHandler = projectDetector.ProjectHandlerFromName(project)
+			projectHandler = projectDetector.FindProjectHandlerFromName(project)
 		}
 
 		if projectHandler == nil {
