@@ -107,7 +107,7 @@ install_binary() {
     target="$bin_dir/$BIN_NAME"
     if [ -f "$target" ]; then
         printf "${YELLOW}Warning: %s already exists. Overwrite? [y/N]: ${NC}" "$target"
-        read -r reply
+        read -r reply </dev/tty
         case "$reply" in
             [yY]*) ;;
             *) printf "${RED}Installation aborted.${NC}\n"; exit 1 ;;
@@ -127,21 +127,22 @@ install_binary() {
         *)
             printf "${YELLOW}Adding %s to PATH...${NC}\n" "$bin_dir"
             shell_profile=""
-            if [ -n "${BASH_VERSION:-}" ]; then
-                shell_profile="$HOME/.bashrc"
-                [ "$(uname -s)" = "Darwin" ] && shell_profile="$HOME/.bash_profile"
-            elif [ -n "${ZSH_VERSION:-}" ]; then
-                shell_profile="$HOME/.zshrc"
-            elif [ -n "${FISH_VERSION:-}" ]; then
-                shell_profile="$HOME/.config/fish/config.fish"
-            else
-                case "${SHELL:-}" in
-                    */bash) shell_profile="$HOME/.bashrc" ;;
-                    */zsh)  shell_profile="$HOME/.zshrc" ;;
-                    */fish) shell_profile="$HOME/.config/fish/config.fish" ;;
-                    *)      shell_profile="$HOME/.profile" ;;
-                esac
-            fi
+            # Check user's actual shell from SHELL env var, not the script's runtime shell
+            case "${SHELL:-}" in
+                */bash) 
+                    shell_profile="$HOME/.bashrc"
+                    [ "$(uname -s)" = "Darwin" ] && shell_profile="$HOME/.bash_profile"
+                    ;;
+                */zsh)  
+                    shell_profile="$HOME/.zshrc"
+                    ;;
+                */fish) 
+                    shell_profile="$HOME/.config/fish/config.fish"
+                    ;;
+                *)      
+                    shell_profile="$HOME/.profile"
+                    ;;
+            esac
 
             if [ -n "$shell_profile" ]; then
                 mkdir -p "$(dirname "$shell_profile")"
