@@ -54,6 +54,10 @@ Example:
 clonei -p npm https://github.com/username/my-project.git
 ```
 
+## Remove
+
+Just remove the binary at `~/.local/bin/clonei` and done.
+
 ## Supported Project Types
 
 - **Node.js**: npm, pnpm
