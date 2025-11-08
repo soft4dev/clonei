@@ -28,6 +28,7 @@ var rootCmd = &cobra.Command{
 		projectType, _ := cmd.Flags().GetString("project")
 		projectDetector := internal.GetProjectDetector()
 		availableProjectTypes := projectDetector.GetAvailableProjects()
+		availableProjectTypes = append(availableProjectTypes, "AUTO")
 		if !utils.ContainsStringInStringSlice(availableProjectTypes, projectType) {
 			msg := fmt.Sprintf("unsupported project type '%s'\nAvailable project types: \n %s", projectType, availableProjectTypes)
 			return customErrors.NewCustomError(msg, customErrors.ErrorTypeError, false)
