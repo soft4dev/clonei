@@ -29,7 +29,8 @@ var rootCmd = &cobra.Command{
 		projectDetector := internal.GetProjectDetector()
 		availableProjectTypes := projectDetector.GetAvailableProjects()
 		if !utils.ContainsStringInStringSlice(availableProjectTypes, projectType) {
-			return customErrors.NewCustomError(fmt.Sprintf("unsupported project type '%s'\nAvailable project types: \n %s", projectType, availableProjectTypes), customErrors.ErrorTypeError, false)
+			msg := fmt.Sprintf("unsupported project type '%s'\nAvailable project types: \n %s", projectType, availableProjectTypes)
+			return customErrors.NewCustomError(msg, customErrors.ErrorTypeError, false)
 		}
 		return nil
 	},
@@ -49,7 +50,8 @@ var rootCmd = &cobra.Command{
 
 		// Check if project directory already exists
 		if _, err := os.Stat(projectDirName); err == nil {
-			return customErrors.NewCustomError(fmt.Sprintf("project directory '%s' already exists in the current location", projectDirName), customErrors.ErrorTypeError, false)
+			msg := fmt.Sprintf("project directory '%s' already exists in the current location", projectDirName)
+			return customErrors.NewCustomError(msg, customErrors.ErrorTypeError, false)
 		}
 
 		// clone the repository
@@ -68,24 +70,25 @@ var rootCmd = &cobra.Command{
 		// detects project type and set the projectHandler accordingly
 		projectDetector := internal.GetProjectDetector()
 		if projectType == "AUTO" {
-			if projectHandler = projectDetector.FindProjectHandlerAuto(projectDirName); projectHandler == nil {
-				return customErrors.NewCustomError(fmt.Sprintf("no handler found for project type '%s'\nAvailable project types: %s", projectType, projectDetector.GetAvailableProjects()), customErrors.ErrorTypeInfo, false)
-			}
+			projectHandler = projectDetector.FindProjectHandlerAuto(projectDirName)
 		} else {
 			projectHandler = projectDetector.FindProjectHandlerFromName(projectType)
 		}
 
-		// it will be nil if user specified project type is not found by the function FindProjectHandlerFromName()
+		installDeps := true
 		if projectHandler == nil {
-			return customErrors.NewCustomError(fmt.Sprintf("no handler found for project type '%s'\nAvailable project types: %s", projectType, projectDetector.GetAvailableProjects()), customErrors.ErrorTypeWarning, false)
+			msg := fmt.Sprintf("no handler found for project type '%s'\nAvailable project types: %s", projectType, projectDetector.GetAvailableProjects())
+			installDeps = false
+			color.PrintWarning(msg)
+		}
+		if installDeps {
+			color.PrintInfo("\n📦 Installing dependencies")
+			if err := projectHandler.Install(projectDirName); err != nil {
+				return customErrors.NewCustomError(fmt.Sprintf("failed to install dependencies: %s", err), customErrors.ErrorTypeWarning, false)
+			}
+			color.PrintSuccess("✓ Dependencies installed successfully \n")
 		}
 
-		color.PrintSuccess("\n📦 Installing dependencies")
-		if err := projectHandler.Install(projectDirName); err != nil {
-			return customErrors.NewCustomError(fmt.Sprintf("failed to install dependencies: %s", err), customErrors.ErrorTypeWarning, false)
-		}
-
-		color.PrintSuccess("✓ Dependencies installed successfully \n")
 		if cd {
 			if err := os.Chdir(projectDirName); err != nil {
 				return customErrors.NewCustomError(fmt.Sprintf("failed to change directory: %s", err), customErrors.ErrorTypeWarning, false)
